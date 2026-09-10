@@ -21,13 +21,17 @@ jobs:
           pip install --upgrade pip setuptools
           pip install buildozer cython
 
-      - name: Install Android SDK Build-Tools & Accept Licenses
+      - name: Accept Licenses & Install Build-Tools
         run: |
-          # Устанавливаем необходимые build-tools, содержащие aidl
+          # Устанавливаем build-tools 33.0.2 в системный SDK
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platforms;android-33"
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Build APK
+      - name: Build APK with Environment SDK/NDK
+        env:
+          # Принудительно передаем Buildozer пути к системным SDK и NDK
+          ANDROIDSDK: ${{ env.ANDROID_HOME }}
+          ANDROIDNDK: ${{ env.ANDROID_NDK_LATEST_HOME }}
         run: |
           buildozer -v android debug
 
