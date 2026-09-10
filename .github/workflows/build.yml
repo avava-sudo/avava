@@ -7,36 +7,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
         with:
-          python-version: '3.11'
+        # Используем стандартную команду сборки под Android
+          command: buildozer -v android debug
+          buildozer_version: stable
 
-      - name: Install System Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libffi-dev libssl-dev
-          pip install --upgrade pip setuptools
-          pip install buildozer cython
-
-      - name: Accept Licenses & Install Build-Tools
-        run: |
-          # Устанавливаем build-tools 33.0.2 в системный SDK
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;33.0.2" "platforms;android-33"
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-      - name: Build APK with Environment SDK/NDK
-        env:
-          # Принудительно передаем Buildozer пути к системным SDK и NDK
-          ANDROIDSDK: ${{ env.ANDROID_HOME }}
-          ANDROIDNDK: ${{ env.ANDROID_NDK_LATEST_HOME }}
-        run: |
-          buildozer -v android debug
-
-      - name: Save APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: bin/*.apk
+          name: binarycalc-apk
+          path: ${{ steps.buildozer.outputs.filename }}
